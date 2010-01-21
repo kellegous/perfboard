@@ -5,41 +5,65 @@ import pysvn
 import sys
 import time
 
-class MockDashboard:
+class MockClient:
   def start(self):
     # returns the last revision handled or None
-    pass
+    return 7420
 
-  def report_result(self, agent, branch, result):
-    # returns success or failure.
-    pass
+  def report_result(self, agent, branch, revision, result):
+    return True
 
 class Agent:
   BASE_URL = "http://google-web-toolkit.googlecode.com/svn/"
 
-  def __init__(self, name, dashboard_url, working_dir, branch = 'trunk'):
-    self.dashboard_url = dashboard_url
+  def __init__(self, name, client, working_dir, branch = 'trunk'):
+    self.client = client
     self.working_dir = working_dir
     self.branch = branch
     self.name = name
 
+  def working_dir_for_branch(self):
+    return os.path.join(self.working_dir, self.branch)
+
+  def working_dir_for_tools(self):
+    return os.path.join(self.working_dir, 'tools')
+
+  def url_for_branch(self):
+    return Agent.BASE_URL + self.branch
+
+  def url_for_tools(self):
+    return Agent.BASE_URL + 'tools'
+
   def start(self):
-    pass
+    client = self.client
+    self.last_revision = client.start()
     # Send request to dashboard. (start: name, branch)
     # Store operating state locally. {revision: x}
 
+  def run_tests(self, revision):
+    print "Running tests on r%d" % revision
+    # TODO(knorton): Do this next.
+
   def run(self):
-    print "run"
-    # Request an svn log starting from the last revision.
-    # For each revision:
-    #   perform tests
-    #   send results to dashboard
+    svn = pysvn.Client()
+    last_revision = self.last_revision
+    if last_revision:
+      log = svn.log(self.url_for_branch(), revision_end = pysvn.Revision(pysvn.opt_revision_kind.number, last_revision + 1))
+      log.reverse()
+      print "Processing %d revisions." % len(log)
+      for change in log:
+        revision = change.data['revision'].number
+        self.run_tests(revision)
+        self.client.report_result(self.name, self.branch, revision, [])
+        self.last_revision = revision
+    else:
+      pass # TODO(knorton): Build the latest revision.
 
 def Main(args):
   # TODO(knorton): Add options parsing.
 
   agent = Agent(name = 'kellegous_primary',
-      dashboard_url = 'http://localhost:5554/m',
+      client = MockClient(),
       working_dir = 'working',
       branch = 'trunk')
 
