@@ -2,6 +2,7 @@
 
 import os
 import pysvn
+import subprocess
 import sys
 import time
 
@@ -34,15 +35,36 @@ class Agent:
   def url_for_tools(self):
     return Agent.BASE_URL + 'tools'
 
+  def _updateWorkingCopy(self, svn, url, path, revision):
+    revision = pysvn.Revision(pysvn.opt_revision_kind.number, revision)
+    if os.path.exists(path):
+      svn.update(path, revision = revision)
+    else:
+      svn.checkout(url, path, revision = revision)
+
   def start(self):
     client = self.client
     self.last_revision = client.start()
     # Send request to dashboard. (start: name, branch)
     # Store operating state locally. {revision: x}
 
-  def run_tests(self, revision):
+  def run_tests(self, svn, revision):
     print "Running tests on r%d" % revision
-    # TODO(knorton): Do this next.
+    # TODO(knorton):
+    # (1) Checkout/Update GWT branch to revision.
+    print "Updating %s" % self.branch
+    self._updateWorkingCopy(svn, self.url_for_branch(), self.working_dir_for_branch(), revision)
+    # (2) Checkout/Update GWT tools to HEAD.
+    print "Updating tools"
+    self._updateWorkingCopy(svn, self.url_for_tools(), self.working_dir_for_tools(), revision)
+    # (3) Build GWT
+    # TODO(knorton): Capture stdout/stderr
+    # TODO(knorton): Check ant and don't assume it's on the path.
+    p = subprocess.Popen("ant", cwd = self.working_dir_for_branch())
+    p.communicate() 
+    assert p.returncode
+      
+    # (4) Run Tests.
 
   def run(self):
     svn = pysvn.Client()
@@ -53,7 +75,7 @@ class Agent:
       print "Processing %d revisions." % len(log)
       for change in log:
         revision = change.data['revision'].number
-        self.run_tests(revision)
+        self.run_tests(svn, revision)
         self.client.report_result(self.name, self.branch, revision, [])
         self.last_revision = revision
     else:
