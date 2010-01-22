@@ -37,8 +37,12 @@ class Agent:
   def _url_for_tools(self):
     return Agent.BASE_URL + 'tools'
 
-  def _updateWorkingCopy(self, svn, url, path, revision):
-    revision = pysvn.Revision(pysvn.opt_revision_kind.number, revision)
+  def _updateWorkingCopy(self, svn, url, path, revision = None):
+    if revision:
+      revision = pysvn.Revision(pysvn.opt_revision_kind.number, revision)
+    else:
+      revision = pysvn.Revision(pysvn.opt_revision_kind.head)
+
     if os.path.exists(path):
       svn.update(path, revision = revision)
     else:
@@ -61,17 +65,21 @@ class Agent:
     print "Running tests on r%d" % revision
     # TODO(knorton):
     # (1) Checkout/Update GWT branch to revision.
-    print "Updating %s" % self.branch
+    print "Updating %s to r%d" % (self.branch, revision)
     self._updateWorkingCopy(svn, self._url_for_branch(), self._path_for_branch(), revision)
     # (2) Checkout/Update GWT tools to HEAD.
     print "Updating tools"
-    self._updateWorkingCopy(svn, self._url_for_tools(), self._path_for_tools(), revision)
+    self._updateWorkingCopy(svn, self._url_for_tools(), self._path_for_tools())
     # (3) Build GWT
     # TODO(knorton): Check ant and don't assume it's on the path.
+    print "Building GWT"
     status, stdout, stderr = self._execute("ant")
+    print stdout
     if status != 0:
       print "Build Failed"
     # (4) Run Tests.
+    # (4.1) Collect size information of samples.
+    # (4.2) Run maark benchmarks and collect size and timing info.
 
   def run(self):
     svn = pysvn.Client()
