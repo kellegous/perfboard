@@ -1,0 +1,22 @@
+.header {
+  background: #ccc;
+  height: 100px;
+}
+
+.title {
+  width: 200px;
+  float: left;
+}
+
+.revision {
+  font-size: 36pt;
+}
+
+.author {
+  font-size: 18pt;
+}
+
+.message {
+  float:left;
+  width: 600px;
+}

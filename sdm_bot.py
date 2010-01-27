@@ -9,17 +9,19 @@ import simplejson
 import subprocess
 import sys
 import time
+import urllib
 
 class Client:
   def __init__(self, host, port = 80):
-    self._host = host
-    self._port = port
+    self._url = "http://%s:%d/perfboard/rpc" % (host, port)
 
   def _dispatch(self, json):
-    http = httplib.HTTPConnection(self._host, self._port)
-    http.request('POST', '/perfboard/rpc', simplejson.dumps(json))
-    response = http.getresponse()
-    return simplejson.loads(response.read())
+    url = urllib.urlopen(self._url, simplejson.dumps(json))
+    return simplejson.loads(url.read())
+    # http = httplib.HTTPConnection(self._host, self._port)
+    # http.request('POST', '/perfboard/rpc', simplejson.dumps(json))
+    # response = http.getresponse()
+    # return simplejson.loads(response.read())
 
   def report_result(self, agent, branch, revision, result):
     data = self._dispatch({
@@ -122,7 +124,7 @@ class Agent:
     print "Building GWT"
     status, stdout, stderr = self._execute("ant")
     if status != 0:
-      # TODO(knorton): Log a build failure.
+      # TODO(knorton): Mark this revision as failed in the store.
       print "Build Failed"
     # (4) Run Tests.
     # (4.1) Collect size information of samples.
