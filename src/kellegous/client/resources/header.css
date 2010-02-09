@@ -1,11 +1,13 @@
 .header {
   background: #ccc;
   height: 100px;
+  width: 1024px;
 }
 
 .title {
-  width: 200px;
+  width: 204px;
   float: left;
+  padding: 0 10px;
 }
 
 .revision {
@@ -17,6 +19,9 @@
 }
 
 .message {
+  padding: 10px 0 0 10px;
   float:left;
   width: 600px;
+  border-left: 1px solid #000;
+  height: 90px;
 }

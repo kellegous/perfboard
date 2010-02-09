@@ -4,14 +4,23 @@
     "http://java.sun.com/dtd/web-app_2_3.dtd">
 <web-app>
   <servlet>
-    <servlet-name>botrpc</servlet-name>
+    <servlet-name>BotServlet</servlet-name>
+    <servlet-class>kellegous.server.BotServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>BotServlet</servlet-name>
+    <url-pattern>/bot</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>RpcServlet</servlet-name>
     <servlet-class>kellegous.server.RpcServlet</servlet-class>
   </servlet>
-
   <servlet-mapping>
-    <servlet-name>botrpc</servlet-name>
-    <url-pattern>/perfboard/rpc</url-pattern>
+    <servlet-name>RpcServlet</servlet-name>
+    <url-pattern>/rpc</url-pattern>
   </servlet-mapping>
+
 
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>

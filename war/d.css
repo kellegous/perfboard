@@ -1,4 +1,7 @@
 body {
   margin: 0;
-  font-family: Helvetica, Arial;
+  font-family: HelveticaNeue-Light, Helvetica, Arial;
+}
+canvas {
+  margin: 10px 0 10px 224px;
 }

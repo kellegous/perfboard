@@ -6,7 +6,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.CssResource;
 
-public class Header {
+public class Header implements Controller.Listener {
 
   public interface Css extends CssResource {
     String author();
@@ -30,7 +30,7 @@ public class Header {
   private final DivElement m_revision;
   private final DivElement m_author;
 
-  public Header(Element parent, Model model, Resources resources) {
+  public Header(Element parent, Controller model, Resources resources) {
     final Document document = parent.getOwnerDocument();
 
     final DivElement root = document.createDivElement();
@@ -56,13 +56,33 @@ public class Header {
     m_revision = revision;
     m_author = author;
 
-    update(model);
+    model.addListener(this);
   }
-  
-  private void update(Model model) {
-    final Model.Revision revision = model.currentRevision();
-    m_revision.setInnerText(revision.number());
-    m_author.setInnerText(revision.author());
-    m_message.setInnerText(revision.message());
+
+  /*
+   * private void update(Model model) { final Model.Revision revision =
+   * model.currentRevision(); m_revision.setInnerText(revision.number());
+   * m_author.setInnerText(revision.author());
+   * m_message.setInnerText(revision.message()); }
+   */
+
+  @Override
+  public void allRevisionsDidFailToLoad(Controller model) {
+  }
+
+  @Override
+  public void allRevisionsDidLoad(Controller model) {
+  }
+
+  @Override
+  public void newRevisionsDidLoad(Controller model) {
+  }
+
+  @Override
+  public void serverDidStartResponding(Controller model) {
+  }
+
+  @Override
+  public void serverDidStopResponding(Controller model) {
   }
 }

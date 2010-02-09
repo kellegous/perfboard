@@ -10,15 +10,15 @@ public class NumberArray extends DataStructure {
   protected NumberArray() {
   }
 
-  public double get(int index) {
+  public final double get(int index) {
     return this.<JsArray> cast().getDouble(index);
   }
 
-  public int size() {
+  public final int size() {
     return this.<JsArray> cast().size();
   }
 
-  public void set(int index, double value) {
+  public final void set(int index, double value) {
     this.<JsArray> cast().setNumber(index, value);
   }
 }
