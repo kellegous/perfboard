@@ -1,0 +1,29 @@
+@def containerHeight 200px;
+
+.logger {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 600px;
+  background: #000;
+  padding: 1px 1px 0 1px;
+  \-webkit-box-shadow: -5px -2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.title {
+  color: #ff0;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.container {
+  background: #fff;
+  overflow: auto;
+  height: containerHeight;
+  \-webkit-transition: height 200ms ease-in-out;
+}
+
+.entry {
+  padding: 5px;
+  border-bottom: 1px solid #999;
+}
