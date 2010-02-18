@@ -1,5 +1,6 @@
 package kellegous.client;
 
+import com.google.gwt.core.client.Duration;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Random;
 
@@ -52,6 +53,7 @@ public class Graph {
   }
 
   public void render() {
+    final Duration d = new Duration();
     switch (RENDER_MODE) {
       case 0:
         render0();
@@ -60,6 +62,7 @@ public class Graph {
         render1();
         break;
     }
+    Debug.log("Graph::render in " + d.elapsedMillis() + "ms.");
   }
 
   private void render1() {

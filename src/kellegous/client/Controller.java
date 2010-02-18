@@ -15,7 +15,7 @@ public class Controller {
     public final Revision revision() {
       JavaScriptObject data = this.<Array<JavaScriptObject>> cast().get(0);
       double id = data.<IntArray> cast().get(0);
-      final String message = data.<StringArray> cast().get(1);
+      final StringArray message = data.<Array<StringArray>> cast().get(1);
       final String author = data.<StringArray> cast().get(2);
       return new Revision(id, author, message);
     }
@@ -64,9 +64,9 @@ public class Controller {
   public static class Revision {
     private final double m_number;
     private final String m_author;
-    private final String m_message;
+    private final StringArray m_message;
 
-    private Revision(double number, String author, String message) {
+    private Revision(double number, String author, StringArray message) {
       m_number = number;
       m_author = author;
       m_message = message;
@@ -88,7 +88,7 @@ public class Controller {
       return m_author;
     }
 
-    public String message() {
+    public StringArray message() {
       return m_message;
     }
   }
@@ -115,6 +115,7 @@ public class Controller {
   }
 
   private void dispatchAllRevisionsDidLoad() {
+    Debug.log("dispatchAllRevisionsDidLoad HEAD=" + currentRevision().number());
     for (int i = 0, n = m_listeners.size(); i < n; ++i)
       m_listeners.get(i).allRevisionsDidLoad(this);
   }
@@ -125,6 +126,7 @@ public class Controller {
   }
 
   private void dispatchNewRevisionsDidLoad() {
+    Debug.log("dispatchNewRevisionsDidLoad");
     for (int i = 0, n = m_listeners.size(); i < n; ++i)
       m_listeners.get(i).newRevisionsDidLoad(this);
   }
