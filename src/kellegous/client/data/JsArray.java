@@ -112,6 +112,18 @@ final class JsArray extends JavaScriptObject {
     return delete this[index];
   }-*/;
 
+  public native String join(String separator) /*-{
+    return this.join(separator);
+  }-*/;
+
+  public native JsArray slice(int start, int end) /*-{
+    return this.slice(start, end);
+  }-*/;
+  
+  public native JsArray slice(int start) /*-{
+    return this.slice(start);
+  }-*/;
+
   public native void resize(int size) /*-{
     this.length = size;
   }-*/;
@@ -151,42 +163,42 @@ final class JsArray extends JavaScriptObject {
   }-*/;
 
   private native double getDoubleImpl(int index) /*-{
-                                                 return this[index];
-                                                 }-*/;
+    return this[index];
+  }-*/;
 
   private native float getFloatImpl(int index) /*-{
-                                               return this[index];
-                                               }-*/;
+    return this[index];
+  }-*/;
 
   private native <T> T getImpl(int index) /*-{
-                                          return this[index];
-                                          }-*/;
+    return this[index];
+  }-*/;
 
   private native int getIntImpl(int index) /*-{
-                                           return this[index];
-                                           }-*/;
+    return this[index];
+  }-*/;
 
   private native String getStringImpl(int index) /*-{
-                                                 return this[index];
-                                                 }-*/;
+    return this[index];
+  }-*/;
 
   private boolean indexIsInBounds(int index) {
     return index < size() && index >= 0;
   }
 
   private native void setBooleanImpl(int index, boolean value) /*-{
-                                                               this[index] = value;
-                                                               }-*/;
+    this[index] = value;
+  }-*/;
 
   private native void setImpl(int index, Object value) /*-{
-                                                       this[index] = value;
-                                                       }-*/;
+    this[index] = value;
+  }-*/;
 
   private native void setNumberImpl(int index, double value) /*-{
-                                                             this[index] = value;
-                                                             }-*/;
+    this[index] = value;
+  }-*/;
 
   private native void setStringImpl(int index, String value) /*-{
-                                                             this[index] = value;
-                                                             }-*/;
+    this[index] = value;
+  }-*/;
 }

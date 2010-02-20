@@ -3,10 +3,12 @@ package kellegous.client;
 import com.google.gwt.core.client.JavaScriptObject;
 
 import kellegous.client.data.Array;
+import kellegous.client.data.Date;
 import kellegous.client.data.IntArray;
+import kellegous.client.data.Numbers;
 import kellegous.client.data.StringArray;
 
-public class Controller {
+public class Model {
 
   public static class Response extends JavaScriptObject {
     protected Response() {
@@ -20,8 +22,8 @@ public class Controller {
       return new Revision(id, author, message);
     }
 
-    public final Array<RevisionPerf> results() {
-      return this.<Array<Array<RevisionPerf>>> cast().get(1);
+    public final Array<PerfData> results() {
+      return this.<Array<Array<PerfData>>> cast().get(1);
     }
   }
   public interface Callback<T> {
@@ -37,51 +39,95 @@ public class Controller {
   }
 
   public interface Listener {
-    void allRevisionsDidLoad(Controller controller);
+    void allRevisionsDidLoad(Model model);
 
-    void allRevisionsDidFailToLoad(Controller controller);
+    void allRevisionsDidFailToLoad(Model model);
 
-    void newRevisionsDidLoad(Controller controller);
+    void newRevisionsDidLoad(Model model);
 
-    void serverDidStopResponding(Controller controller);
+    void serverDidStopResponding(Model model);
 
-    void serverDidStartResponding(Controller controller);
+    void serverDidStartResponding(Model model);
   }
 
-  public static class RevisionPerf extends JavaScriptObject {
-    protected RevisionPerf() {
+  public static class SizeData extends JavaScriptObject {
+    protected SizeData() {
     }
 
-    public final native JavaScriptObject data() /*-{
-      return this.data;
+    public final int max() {
+      return this.<IntArray> cast().get(0);
+    }
+
+    public final int min() {
+      return this.<IntArray> cast().get(1);
+    }
+
+    private static SizeData as(JavaScriptObject object) {
+      assert object != null;
+      assert object.<IntArray> cast().size() == 2;
+      return object.cast();
+    }
+  }
+
+  public final static class PerfData extends JavaScriptObject {
+    protected PerfData() {
+    }
+
+    public native double revision() /*-{
+      return this.revision;
     }-*/;
 
-    public final native double id() /*-{
-      return this.id;
+    private native JavaScriptObject dataFor(String name) /*-{
+      return this.data[name];
     }-*/;
+
+    public SizeData sizeDataFor(String name) {
+      return SizeData.as(dataFor(name));
+    }
+
+    private static String toString(PerfData pd) {
+      return Json.stringify(pd);
+    }
   }
 
   public static class Revision {
-    private final double m_number;
+    private final double m_revision;
     private final String m_author;
     private final StringArray m_message;
+    private final Date m_date;
 
-    private Revision(double number, String author, StringArray message) {
-      m_number = number;
+    private Revision(double revision, String author, StringArray message) {
+      m_revision = revision;
       m_author = author;
       m_message = message;
+      m_date = Date.create(); // TODO(knorton): Fix this.
     }
 
-    public double id() {
-      return m_number;
+    public double revision() {
+      return m_revision;
     }
 
-    private native static String number(double n) /*-{
-      return "r" + n;
-    }-*/;
+    public static String format(Revision r) {
+      return "r" + Numbers.toInt(r.revision());
+    }
 
-    public String number() {
-      return number(m_number);
+    public static String shortenAuthor(String author) {
+      // TODO(knorton): What to do about random Googlers who are now committing?
+      int index = author.indexOf("@google.com");
+      if (index >= 0)
+        return author.substring(0, index);
+
+      index = author.indexOf("@fabbott-svn");
+      if (index >= 0)
+        return author.substring(0, index);
+
+      if (author.indexOf("gwt.team.") == 0)
+        return author.substring("gwt.team.".length());
+      
+      if (author.indexOf("gwt.mirrorbot@") == 0)
+        return "MirrorBot";
+
+      return author;
     }
 
     public String author() {
@@ -91,9 +137,13 @@ public class Controller {
     public StringArray message() {
       return m_message;
     }
+
+    public Date date() {
+      return m_date;
+    }
   }
 
-  private Array<RevisionPerf> m_results;
+  private Array<PerfData> m_results;
 
   private Revision m_currentRevision;
 
@@ -105,17 +155,17 @@ public class Controller {
 
   private boolean m_serverIsResponding = true;
 
-  public Controller(Client client) {
+  public Model(Client client) {
     this(client, 400);
   }
 
-  public Controller(Client client, int n) {
+  public Model(Client client, int n) {
     m_client = client;
     m_size = n;
   }
 
   private void dispatchAllRevisionsDidLoad() {
-    Debug.log("dispatchAllRevisionsDidLoad HEAD=" + currentRevision().number());
+    Debug.log("dispatchAllRevisionsDidLoad HEAD=" + Revision.format(currentRevision()));
     for (int i = 0, n = m_listeners.size(); i < n; ++i)
       m_listeners.get(i).allRevisionsDidLoad(this);
   }
@@ -147,7 +197,7 @@ public class Controller {
       m_listeners.get(i).serverDidStartResponding(this);
   }
 
-  public Array<RevisionPerf> results() {
+  public Array<PerfData> results() {
     return m_results;
   }
 
@@ -165,6 +215,13 @@ public class Controller {
       public void didCallback(Response response) {
         m_currentRevision = response.revision();
         m_results = response.results();
+
+        // Debug
+        if (Debug.enabled()) {
+          for (int i = 0, n = m_results.size(); i < n; ++i)
+            Debug.log(PerfData.toString(m_results.get(i)));
+        }
+
         dispatchAllRevisionsDidLoad();
       }
 
@@ -177,7 +234,7 @@ public class Controller {
 
   public void loadNew() {
     assert m_results != null;
-    m_client.loadNewRevisions(m_currentRevision.id(), new Callback<Response>() {
+    m_client.loadNewRevisions(m_currentRevision.revision(), new Callback<Response>() {
       @Override
       public void didCallback(Response value) {
         dispatchServerDidStartResponding();

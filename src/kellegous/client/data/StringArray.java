@@ -43,4 +43,16 @@ public final class StringArray extends JavaScriptObject {
   public boolean isEmpty() {
     return size() == 0;
   }
+
+  public String join(String separator) {
+    return this.<JsArray> cast().join(separator);
+  }
+
+  public StringArray slice(int start, int end) {
+    return this.<JsArray> cast().slice(start, end).cast();
+  }
+
+  public StringArray slice(int start) {
+    return this.<JsArray> cast().slice(start).cast();
+  }
 }

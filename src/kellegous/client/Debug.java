@@ -23,4 +23,8 @@ public class Debug {
     if (m_logger != null)
       m_logger.log(message);
   }
+  
+  public static boolean enabled() {
+    return m_logger != null;
+  }
 }

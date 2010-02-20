@@ -47,6 +47,46 @@ def LoadLog(path):
         return (message, int(m.groups()[0]))
     assert False
 
+  def FormatMessage(message):
+    def Reline(message, size):
+      data = []
+      for line in message:
+        if len(line) <= size:
+          data.append(line)
+        else:
+          # split on word boundary
+          words = line.split(" ")
+          line_of_words = []
+          len_of_line = 0
+          while len(words) > 0:
+            word = words[0]
+            if len(word) + 1 + len_of_line > size:
+              data.append(" ".join(line_of_words))
+              line_of_words = []
+              len_of_line = 0
+              if len(word) >= size:
+                data.append(word)
+                words = words[1:]
+            else:
+              line_of_words.append(word)
+              len_of_line += len(word) + 1
+              words = words[1:]
+          if len(line_of_words) > 0:
+            data.append(" ".join(line_of_words))
+      return data
+          
+    def Trim(message):
+      start = 0
+      end = len(message) - 1
+      while len(message[start]) == 0 and start < end:
+        start += 1
+      if start == end:
+        return [""]
+      while len(message[end]) == 0 and start < end:
+        end -= 1
+      return message[start:end + 1]
+    return Reline(Trim(message), 80)
+
   proc = subprocess.Popen(['git', 'log'], stdout=subprocess.PIPE, cwd = path)
   (stdout, stderr) = proc.communicate()
   lines = stdout.split("\n")
@@ -74,6 +114,7 @@ def LoadLog(path):
       x += 1
 
     message, svn_id = ParseMessage(message)
+    message = FormatMessage(message)
 
     yield { 'revision' : svn_id, 'author' : author, 'date' : date, 'message' : message }
 

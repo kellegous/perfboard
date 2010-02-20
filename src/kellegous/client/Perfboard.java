@@ -97,23 +97,25 @@ public class Perfboard implements EntryPoint {
   }
 
   public void onModuleLoad() {
+    final String[] sizeTags = new String[] {"mail", "json", "showcase", "hello", "dynatable",};
     Debug.init(new Logger(Document.get()));
     final Resources resources = GWT.create(Resources.class);
     StyleInjector.inject(resources.headerCss().getText());
 
-    final Controller controller = new Controller(new MockData.Client());
+    final Model model = new Model(new MockData.Client());
 
     final DivElement rootElem = Document.get().getElementById("a").cast();
-    new Header(rootElem, controller, resources);
-    for (int i = 0; i < 10; ++i) {
-      final Graph graph = new Graph(rootElem);
-      Dom.schedule(new Runnable() {
-        @Override
-        public void run() {
-          graph.render();
-        }
-      });
-    }
-    controller.loadAll();
+    new Header(rootElem, model, resources);
+    for (int i = 0, n = sizeTags.length; i < n; ++i)
+      new SizeGraph(rootElem, model, sizeTags[i]);
+    model.loadAll();
+
+    Dom.scheduleRepeating(new Runnable() {
+      @Override
+      public void run() {
+        Debug.log("Reloading...");
+        model.loadAll();
+      }
+    }, 1000);
   }
 }
