@@ -116,7 +116,7 @@ def LoadLog(path):
     message, svn_id = ParseMessage(message)
     message = FormatMessage(message)
 
-    yield { 'revision' : svn_id, 'author' : author, 'date' : date, 'message' : message }
+    yield { 'revision' : 'r%d' % svn_id, 'author' : author, 'date' : date, 'message' : message }
 
 def TransformLogs(logs, series):
   result = []
@@ -125,7 +125,7 @@ def TransformLogs(logs, series):
     for name, item in series.items():
       data[name] = item.next()
     log['data'] = data
-    result.append(log)
+    result.insert(0, log)
   return result
 
 def Main(args):

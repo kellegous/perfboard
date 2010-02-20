@@ -10,6 +10,8 @@ import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.topspin.ui.client.ClickEvent;
 import com.google.gwt.topspin.ui.client.ClickListener;
 
+import kellegous.client.model.Model;
+
 public class Perfboard implements EntryPoint {
 
   public static class Logger implements Debug.Logger, ClickListener {
@@ -93,29 +95,21 @@ public class Perfboard implements EntryPoint {
 
   }
 
-  public interface Resources extends Header.Resources {
+  public interface Resources extends Header.Resources, SizeGraph.Resources {
   }
 
   public void onModuleLoad() {
     final String[] sizeTags = new String[] {"mail", "json", "showcase", "hello", "dynatable",};
     Debug.init(new Logger(Document.get()));
     final Resources resources = GWT.create(Resources.class);
-    StyleInjector.inject(resources.headerCss().getText());
+    StyleInjector.inject(resources.headerCss().getText() + resources.sizeGraphCss().getText());
 
-    final Model model = new Model(new MockData.Client());
+    final Model model = new Model(MockData.createClient());
 
     final DivElement rootElem = Document.get().getElementById("a").cast();
     new Header(rootElem, model, resources);
     for (int i = 0, n = sizeTags.length; i < n; ++i)
-      new SizeGraph(rootElem, model, sizeTags[i]);
-    model.loadAll();
-
-    Dom.scheduleRepeating(new Runnable() {
-      @Override
-      public void run() {
-        Debug.log("Reloading...");
-        model.loadAll();
-      }
-    }, 1000);
+      new SizeGraph(resources.sizeGraphCss(), rootElem, model, sizeTags[i]);
+    model.load();
   }
 }

@@ -34,26 +34,38 @@ public final class Array<T> extends DataStructure {
   }
 
   public T get(int index) {
-    return this.<JsArray>cast().<T>get(index);
+    return this.<JsArray> cast().<T> get(index);
   }
 
   public int size() {
-    return this.<JsArray>cast().size();
+    return this.<JsArray> cast().size();
   }
 
   public boolean remove(int index) {
-    return this.<JsArray>cast().remove(index);
+    return this.<JsArray> cast().remove(index);
   }
 
   public void resize(int size) {
-    this.<JsArray>cast().resize(size);
+    this.<JsArray> cast().resize(size);
   }
 
   public void set(int index, T value) {
-    this.<JsArray>cast().set(index, value);
+    this.<JsArray> cast().set(index, value);
   }
-  
+
   public boolean isEmpty() {
     return size() == 0;
+  }
+
+  public static int size(JavaScriptObject obj) {
+    return obj.<JsArray> cast().size();
+  }
+
+  public Array<T> slice(int start, int end) {
+    return this.<JsArray> cast().slice(start, end).cast();
+  }
+
+  public Array<T> slice(int start) {
+    return this.<JsArray> cast().slice(start).cast();
   }
 }

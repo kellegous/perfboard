@@ -2,112 +2,86 @@ package kellegous.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
-import kellegous.client.Model.Response;
 import kellegous.client.data.Array;
+import kellegous.client.data.Callback;
 import kellegous.client.data.IntArray;
-import kellegous.client.data.NumberArray;
 import kellegous.client.data.StringArray;
+import kellegous.client.model.Client;
 
 public class MockData {
-  private static class Revision extends JavaScriptObject {
+  private final static class Revision extends JavaScriptObject {
     @SuppressWarnings("unused")
     protected Revision() {
     }
 
-    final native double revision() /*-{
+    native String revision() /*-{
       return this.revision;
     }-*/;
 
-    final native String author() /*-{
+    native String author() /*-{
       return this.author;
     }-*/;
 
-    final native StringArray message() /*-{
+    native StringArray message() /*-{
       return this.message;
     }-*/;
 
-    @SuppressWarnings("unused")
-    final native IntArray date() /*-{
+    native IntArray date() /*-{
       return this.date;
     }-*/;
+
+    JavaScriptObject toArray() {
+      final JavaScriptObject struct = JavaScriptObject.createArray();
+      struct.<StringArray> cast().set(0, revision());
+      struct.<Array<StringArray>> cast().set(1, message());
+      struct.<StringArray> cast().set(2, author());
+      struct.<Array<IntArray>> cast().set(3, date());
+      return struct;
+    }
   }
 
-  private static Model.Response create(Array<Revision> revisions, int offset, int n) {
+  private static Client.LoadResponse create(Array<Revision> revisions, int offset, int n) {
     assert offset + n < revisions.size();
-    final Revision revision = revisions.get(offset);
+    final int size = revisions.size();
 
-    // TODO(knorton): Add date.
-    // Contruct head [rev, message, author]
-    final JavaScriptObject head = JavaScriptObject.createArray();
-    head.<NumberArray> cast().set(0, revision.revision());
-    head.<Array<StringArray>> cast().set(1, revision.message());
-    head.<StringArray> cast().set(2, revision.author());
-
-    // Contruct tail []
-    final Array<JavaScriptObject> tail = Array.create();
-    for (int i = 0; i < n; ++i)
-      tail.append(revisions.get(offset + i));
-
-    // Debug
-    if (Debug.enabled()) {
-      for (int i = 0; i < n; ++i)
-        Debug.log("revision loaded: " + revisions.get(offset + i).revision());
-    }
+    final Array<Revision> selected = revisions.slice(size - offset - n, size - offset);
+    final Revision revision = selected.get(selected.size() - 1);
 
     final Array<JavaScriptObject> response = Array.create();
-    response.set(0, head);
-    response.set(1, tail);
+    response.set(0, revision.toArray());
+    response.<IntArray> cast().set(1, size);
+    response.set(2, selected);
     return response.cast();
   }
 
-  public static class Client implements Model.Client {
+  public static Client createClient() {
+    return new ClientImpl();
+  }
+
+  private static class ClientImpl implements Client {
     private static final String URL = "/mock-data.json";
 
     private Array<Revision> m_data;
 
-    private int m_offset = 0;
-
-    private void load(final Model.Callback<JavaScriptObject> callback) {
-      Debug.log("Loading data...");
-      Xhr.getJson(URL, new Xhr.Callback<JavaScriptObject>() {
-
-        @Override
-        public void didFail() {
-          callback.didFail();
-        }
-
-        @Override
-        public void didCallback(JavaScriptObject value) {
-          assert m_data == null;
-          m_data = value.cast();
-          callback.didCallback(value);
-        }
-      });
-    }
-
     @Override
-    public void loadAllRevisions(final int n, final Model.Callback<Response> callback) {
-      m_offset++;
-      if (m_data != null) {
-        callback.didCallback(create(m_data, m_offset, n));
-        return;
+    public void load(final int n, final Callback<LoadResponse> callback) {
+      if (m_data == null) {
+        Xhr.getJson(URL, new Xhr.Callback<JavaScriptObject>() {
+
+          @Override
+          public void didFail() {
+            callback.didFail();
+          }
+
+          @Override
+          public void didCallback(JavaScriptObject value) {
+            m_data = value.cast();
+            callback.didCallback(create(m_data, 0, n));
+          }
+        });
+      } else {
+        callback.didCallback(create(m_data, 0, n));
       }
-
-      load(new Model.Callback<JavaScriptObject>() {
-        @Override
-        public void didCallback(JavaScriptObject value) {
-          callback.didCallback(create(m_data, m_offset, n));
-        }
-
-        @Override
-        public void didFail() {
-          callback.didFail();
-        }
-      });
-    }
-
-    @Override
-    public void loadNewRevisions(double sinceRevision, Model.Callback<Response> callback) {
     }
   }
 }

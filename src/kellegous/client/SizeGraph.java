@@ -1,76 +1,102 @@
 package kellegous.client;
 
+import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.CssResource;
 
-import kellegous.client.Model.PerfData;
 import kellegous.client.data.Array;
 import kellegous.client.data.NumberArray;
+import kellegous.client.model.Model;
+import kellegous.client.model.PerfData;
 
+// TODO(knorton): Add increase/decrease indicators.
+// TODO(knorton): Draw max/min bars.
 public class SizeGraph implements Model.Listener {
-  private static final int HEIGHT = 40;
-  private static final int WIDTH = 800;
-  private static final int RENDER_MODE = 1;
 
   private final CanvasElement.Context m_context;
   private final String m_tag;
+  private final int m_width, m_height;
 
-  public SizeGraph(Element parent, Model model, String tag) {
-    final CanvasElement canvas = CanvasElement.create(parent.getOwnerDocument(), WIDTH, HEIGHT);
-    parent.appendChild(canvas);
+  public interface Css extends CssResource {
+    int width();
+
+    int height();
+
+    String canvas();
+
+    String graph();
+
+    String info();
+  }
+
+  public interface Resources extends ClientBundle {
+    @Source("resources/size-graph.css")
+    Css sizeGraphCss();
+  }
+
+  public SizeGraph(Css css, Element parent, Model model, String tag) {
+    final Document document = parent.getOwnerDocument();
+    final DivElement graph = document.createDivElement();
+    final CanvasElement canvas = CanvasElement.create(document, css.width(), css.height());
+    final DivElement info = document.createDivElement();
+
+    graph.setClassName(css.graph());
+    canvas.setClassName(css.canvas());
+    info.setClassName(css.info());
+
+    graph.appendChild(info);
+    graph.appendChild(canvas);
+    parent.appendChild(graph);
+
+    // TODO(knorton): Probably want a dedicated label.
+    info.setInnerText(tag);
+
     m_context = canvas.context();
     m_tag = tag;
+    m_width = css.width();
+    m_height = css.height();
+
     model.addListener(this);
   }
 
-  private static double max(NumberArray data) {
+  private static double max(Array<Model.SizeData> data) {
     double max = Double.MIN_VALUE;
     for (int i = 0, n = data.size(); i < n; ++i) {
-      final double v = data.get(i);
+      final double v = data.get(i).max();
       if (v > max)
         max = v;
     }
     return max;
   }
 
-  private void render1(NumberArray data) {
+  private void render(Array<Model.SizeData> data) {
     final double max = max(data);
-    final double dx = (float)WIDTH / (float)data.size();
-    final double dy = (float)HEIGHT / (float)max;
+    final double dx = (float)m_width / (float)data.size();
+    final double dy = (float)m_height / (float)max;
     final CanvasElement.Context context = m_context;
-    m_context.clearRect(0, 0, WIDTH, HEIGHT);
+    m_context.clearRect(0, 0, m_width, m_height);
     context.setFillStyle("#39f");
     for (int i = 0, n = data.size(); i < n; ++i) {
-      final double y = dy * data.get(i);
-      context.fillRect(dx * i, HEIGHT - y, dx / 2.0, y);
+      final double y = dy * data.get(i).max();
+      context.fillRect(dx * i, m_height - y, dx / 2.0, y);
+    }
+
+    context.setFillStyle("rgba(0, 0, 0, 0.4)");
+    for (int i = 0, n = data.size(); i < n; ++i) {
+      final Model.SizeData d = data.get(i);
+      final double y = dy * d.max();
+      context.fillRect(dx * i, m_height - y, dx / 2.0, y - dy * d.min());
     }
   }
 
-  private void render0(NumberArray data) {
-    final double max = max(data);
-    // final double min = min(data);
-    final double dx = (float)WIDTH / (float)data.size();
-    final double dy = (float)HEIGHT / (float)max;
-    final double y0 = HEIGHT - dy * data.get(0);
-
-    final CanvasElement.Context context = m_context;
-    context.beginPath();
-    context.moveTo(0, y0);
-    for (int i = 1, n = data.size(); i < n; ++i) {
-      final double y = dy * data.get(i);
-      context.lineTo(dx * i, HEIGHT - y);
-    }
-    context.moveTo(0, y0);
-    context.setStrokeStyle("#f00");
-    context.stroke();
-  }
-
-  @Override
-  public void allRevisionsDidFailToLoad(Model model) {
-  }
-
-  @Override
-  public void allRevisionsDidLoad(Model model) {
-    render(model.results());
+  private static Array<Model.SizeData> toData2(Array<PerfData> results, String tag) {
+    // TODO(knorton): Supply an initial size.
+    final Array<Model.SizeData> data = Array.create();
+    for (int i = 0, n = results.size(); i < n; ++i)
+      data.append(results.get(i).sizeDataFor(tag));
+    return data;
   }
 
   private static NumberArray toData(Array<PerfData> results, String tag) {
@@ -81,26 +107,16 @@ public class SizeGraph implements Model.Listener {
     return data;
   }
 
-  private void render(Array<PerfData> results) {
-    switch (RENDER_MODE) {
-      case 0:
-        render0(toData(results, m_tag));
-        break;
-      case 1:
-        render1(toData(results, m_tag));
-        break;
-    }
-  }
-
-  @Override
-  public void newRevisionsDidLoad(Model model) {
-  }
-
   @Override
   public void serverDidStartResponding(Model model) {
   }
 
   @Override
   public void serverDidStopResponding(Model model) {
+  }
+
+  @Override
+  public void didLoad(Model model) {
+    render(toData2(model.results(), m_tag));
   }
 }

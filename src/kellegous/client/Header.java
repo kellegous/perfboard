@@ -7,6 +7,8 @@ import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.CssResource;
 
 import kellegous.client.data.StringArray;
+import kellegous.client.model.Model;
+import kellegous.client.model.Revision;
 
 public class Header implements Model.Listener {
 
@@ -74,9 +76,9 @@ public class Header implements Model.Listener {
   }
 
   private void update(Model model) {
-    final Model.Revision revision = model.currentRevision();
-    m_revision.setInnerText(Model.Revision.format(revision));
-    m_author.setInnerText(Model.Revision.shortenAuthor(revision.author()));
+    final Revision revision = model.currentRevision();
+    m_revision.setInnerText(revision.revision());
+    m_author.setInnerText(Revision.shortenAuthor(revision.author()));
 
     // TODO(knorton): Just reuse existing divs.
     // TODO(knorton): Linkify the message.
@@ -100,23 +102,15 @@ public class Header implements Model.Listener {
   }
 
   @Override
-  public void allRevisionsDidFailToLoad(Model model) {
-  }
-
-  @Override
-  public void allRevisionsDidLoad(Model model) {
-    update(model);
-  }
-
-  @Override
-  public void newRevisionsDidLoad(Model model) {
-  }
-
-  @Override
   public void serverDidStartResponding(Model model) {
   }
 
   @Override
   public void serverDidStopResponding(Model model) {
+  }
+
+  @Override
+  public void didLoad(Model model) {
+    update(model);
   }
 }
