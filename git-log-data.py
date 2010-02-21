@@ -142,11 +142,11 @@ def Main(args):
     sys.exit(1)
 
   series = {
-    'showcase' : RandomSeries(300000),
-    'mail' : RandomSeries(150000),
-    'json' : RandomSeries(100000),
-    'hello' : RandomSeries(60000),
-    'dynatable' : RandomSeries(80000),
+    'size-showcase' : RandomSeries(300000),
+    'size-mail' : RandomSeries(150000),
+    'size-json' : RandomSeries(100000),
+    'size-hello' : RandomSeries(60000),
+    'size-dynatable' : RandomSeries(80000),
   }
   print simplejson.dumps(TransformLogs(LoadLog(args[0]), series), indent=4)
 

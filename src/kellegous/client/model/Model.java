@@ -49,7 +49,7 @@ public class Model {
   private boolean m_serverIsResponding = true;
 
   public Model(Client client) {
-    this(client, 400);
+    this(client, 200);
   }
 
   public Model(Client client, int n) {

@@ -12,6 +12,11 @@ import com.google.gwt.topspin.ui.client.ClickListener;
 
 import kellegous.client.model.Model;
 
+/*
+ * TODO: Add ability to scroll through time. Finish ui design. Build non-mock
+ * client. Build server side of non-mock client. Create batch builder to record
+ * enough results to fill the screen on launch.
+ */
 public class Perfboard implements EntryPoint {
 
   public static class Logger implements Debug.Logger, ClickListener {
@@ -97,19 +102,25 @@ public class Perfboard implements EntryPoint {
 
   public interface Resources extends Header.Resources, SizeGraph.Resources {
   }
-
-  public void onModuleLoad() {
-    final String[] sizeTags = new String[] {"mail", "json", "showcase", "hello", "dynatable",};
+  
+  public void onModuleLoad() {    
     Debug.init(new Logger(Document.get()));
     final Resources resources = GWT.create(Resources.class);
     StyleInjector.inject(resources.headerCss().getText() + resources.sizeGraphCss().getText());
 
     final Model model = new Model(MockData.createClient());
 
-    final DivElement rootElem = Document.get().getElementById("a").cast();
-    new Header(rootElem, model, resources);
-    for (int i = 0, n = sizeTags.length; i < n; ++i)
-      new SizeGraph(resources.sizeGraphCss(), rootElem, model, sizeTags[i]);
+    final DivElement root = Document.get().getElementById("a").cast();
+    new Header(root, model, resources);
+    
+    // Build size graphs.
+    final SizeGraph.Css sizeGraphCss = resources.sizeGraphCss();
+    final String[] sizeGraphs = new String[] {"mail", "json", "showcase", "hello", "dynatable"};
+    for (int i = 0, n = sizeGraphs.length; i < n; ++i)
+      new SizeGraph(sizeGraphCss, root, model, "size-" + sizeGraphs[i], sizeGraphs[i]);
+    
+    // TODO(knorton): Build speed graphs.
+
     model.load();
   }
 }

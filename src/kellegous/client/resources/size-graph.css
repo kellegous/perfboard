@@ -15,8 +15,30 @@
   bottom: 0;
   padding-left: 10px;
 }
+
 .canvas {
   position: absolute;
   top: 0;
   left: 224px;
+}
+
+.label {
+  display: inline-block;
+  width: 160px;
+}
+
+.change {
+ font-size: 80%;
+}
+
+.changeMeh {
+  color: #999;
+}
+
+.changeYay {
+  color: #090;
+}
+
+.changeBoo {
+  color: #900;
 }

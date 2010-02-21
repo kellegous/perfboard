@@ -1,7 +1,11 @@
 .header {
-  background: #ccc;
+  background-image: url("perfboard/veil.png"), url("perfboard/bg.png");
+  background-repeat: repeat-x, repeat;
+  background-position: 0% 100%, 0% 0%;
+
   height: 100px;
   width: 1024px;
+  border-bottom: 4px solid #ddd;
 }
 
 .title {
