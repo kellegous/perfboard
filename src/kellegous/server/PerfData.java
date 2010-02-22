@@ -19,7 +19,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Iterator;
 
-public class RevisionData {
+public class PerfData {
   private static JsonObject stringToJson(String json) throws JsonException {
     final StringReader reader = new StringReader(json);
     try {
@@ -44,18 +44,20 @@ public class RevisionData {
   public static final String BRANCH = "branch";
   public static final String REVISION = "revision";
   public static final String DATA = "data";
+  public static final String SORT_KEY = "sort-key";
 
   private final Entity m_entity;
 
-  private RevisionData(Entity entity) {
+  private PerfData(Entity entity) {
     assert KIND.equals(entity.getKind());
     m_entity = entity;
   }
 
-  public RevisionData(String branch, long revision, JsonObject data) {
+  public PerfData(String branch, String revision, long sortKey, JsonObject data) {
     m_entity = new Entity(KIND, keyFor(branch, revision));
     m_entity.setProperty(BRANCH, branch);
-    m_entity.setProperty(REVISION, Long.valueOf(revision));
+    m_entity.setProperty(REVISION, revision);
+    m_entity.setProperty(SORT_KEY, sortKey);
     setData(data);
   }
 
@@ -63,8 +65,8 @@ public class RevisionData {
     return (String)m_entity.getProperty(BRANCH);
   }
 
-  public long revision() {
-    return ((Long)m_entity.getProperty(REVISION)).longValue();
+  public String revision() {
+    return (String)m_entity.getProperty(REVISION);
   }
 
   public JsonObject data() {
@@ -103,19 +105,19 @@ public class RevisionData {
     store.put(m_entity);
   }
 
-  private static String keyFor(String branch, long revision) {
+  private static String keyFor(String branch, String revision) {
     return branch + revision;
   }
 
-  public static RevisionData find(DatastoreService store, String branch, long revision) {
+  public static PerfData find(DatastoreService store, String branch, String revision) {
     try {
-      return new RevisionData(store.get(KeyFactory.createKey(KIND, keyFor(branch, revision))));
+      return new PerfData(store.get(KeyFactory.createKey(KIND, keyFor(branch, revision))));
     } catch (EntityNotFoundException e) {
       return null;
     }
   }
 
-  private static class Iter implements Iterator<RevisionData> {
+  private static class Iter implements Iterator<PerfData> {
     private final Iterator<Entity> m_iter;
 
     public Iter(Iterator<Entity> iter) {
@@ -128,8 +130,8 @@ public class RevisionData {
     }
 
     @Override
-    public RevisionData next() {
-      return new RevisionData(m_iter.next());
+    public PerfData next() {
+      return new PerfData(m_iter.next());
     }
 
     @Override
@@ -138,13 +140,13 @@ public class RevisionData {
     }
   }
 
-  public static RevisionData current(DatastoreService store, String branch) {
-    final Iterator<RevisionData> iter = recent(store, branch, 1);
+  public static PerfData current(DatastoreService store, String branch) {
+    final Iterator<PerfData> iter = recent(store, branch, 1);
     return iter.hasNext() ? iter.next() : null;
   }
 
-  public static Iterator<RevisionData> recent(DatastoreService store, String branch, int limit) {
-    final Query query = new Query(KIND).addFilter(BRANCH, FilterOperator.EQUAL, branch).addSort(REVISION, SortDirection.DESCENDING);
+  public static Iterator<PerfData> recent(DatastoreService store, String branch, int limit) {
+    final Query query = new Query(KIND).addFilter(BRANCH, FilterOperator.EQUAL, branch).addSort(SORT_KEY, SortDirection.DESCENDING);
     return new Iter(store.prepare(query).asIterator(FetchOptions.Builder.withLimit(limit)));
   }
 }

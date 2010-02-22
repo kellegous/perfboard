@@ -30,7 +30,7 @@ public class BotServlet extends HttpServlet {
       res.sendError(400);
 
     final DatastoreService store = DatastoreServiceFactory.getDatastoreService();
-    final RevisionData data = RevisionData.current(store, branch.getString());
+    final PerfData data = PerfData.current(store, branch.getString());
 
     final JsonObject result = JsonObject.create();
     if (data != null)
@@ -40,15 +40,16 @@ public class BotServlet extends HttpServlet {
 
   private static void respondToReportResultCommand(HttpServletRequest req, HttpServletResponse res, JsonObject json) throws IOException {
     final JsonString branch = json.get("branch").asString();
-    final JsonNumber revision = json.get("revision").asNumber();
+    final JsonString revision = json.get("revision").asString();
     final JsonObject data = json.get("data").asObject();
-    if (branch == null || revision == null || data == null)
+    final JsonNumber sortKey = json.get("sort-key").asNumber();
+    if (branch == null || revision == null || data == null || sortKey == null)
       res.sendError(400);
 
     final DatastoreService store = DatastoreServiceFactory.getDatastoreService();
-    final RevisionData pd = RevisionData.find(store, branch.getString(), revision.getInteger());
+    final PerfData pd = PerfData.find(store, branch.getString(), revision.getString());
     if (pd == null) {
-      new RevisionData(branch.getString(), revision.getInteger(), data).save(store);
+      new PerfData(branch.getString(), revision.getString(), sortKey.getInteger(), data).save(store);
     } else {
       pd.updateData(data);
       pd.save(store);
@@ -91,11 +92,11 @@ public class BotServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-    final Iterator<RevisionData> revs = RevisionData.recent(DatastoreServiceFactory.getDatastoreService(), "trunk", 100);
+    final Iterator<PerfData> revs = PerfData.recent(DatastoreServiceFactory.getDatastoreService(), "trunk", 100);
     res.setContentType("text/plain");
     final Writer writer = res.getWriter();
     while (revs.hasNext()) {
-      final RevisionData rev = revs.next();
+      final PerfData rev = revs.next();
       writer.write(rev.revision() + "\n");
       rev.data().write(writer);
       writer.write("\n");
