@@ -57,6 +57,10 @@ public class Model {
     m_size = n;
   }
 
+  public int selectionSize() {
+    return m_size;
+  }
+
   private void dispatchDidLoad() {
     for (int i = 0, n = m_listeners.size(); i < n; ++i)
       m_listeners.get(i).didLoad(this);
@@ -102,8 +106,10 @@ public class Model {
         // TODO(knorton): Rename to selectedRevision;
         m_currentRevision = value.head();
         m_results = value.results();
+
         if (Debug.enabled())
-          Debug.log("Loaded revisions " + m_results.get(0).revision() + " - " + m_results.get(m_results.size() - 1).revision());
+          Debug.log("Load (" + m_results.get(0).revision() + " - " + m_results.get(m_results.size() - 1).revision() + ") count: " + value.numberOfRevisions());
+
         dispatchServerDidStartResponding();
         dispatchDidLoad();
       }

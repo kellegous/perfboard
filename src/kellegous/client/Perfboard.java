@@ -11,6 +11,7 @@ import com.google.gwt.topspin.ui.client.ClickEvent;
 import com.google.gwt.topspin.ui.client.ClickListener;
 
 import kellegous.client.model.Model;
+import kellegous.client.model.RealClient;
 
 /*
  * TODO: Add ability to scroll through time. Finish ui design. Build non-mock
@@ -102,23 +103,25 @@ public class Perfboard implements EntryPoint {
 
   public interface Resources extends Header.Resources, SizeGraph.Resources {
   }
-  
-  public void onModuleLoad() {    
+
+  public void onModuleLoad() {
     Debug.init(new Logger(Document.get()));
     final Resources resources = GWT.create(Resources.class);
     StyleInjector.inject(resources.headerCss().getText() + resources.sizeGraphCss().getText());
 
-    final Model model = new Model(MockData.createClient());
+    // final Model model = new Model(MockData.createClient());
+    final Model model = new Model(new RealClient("/rpc", "trunk"));
 
     final DivElement root = Document.get().getElementById("a").cast();
     new Header(root, model, resources);
-    
+
     // Build size graphs.
+    final SelectionCoordination.Controller selectionController = new SelectionCoordination.Controller();
     final SizeGraph.Css sizeGraphCss = resources.sizeGraphCss();
     final String[] sizeGraphs = new String[] {"mail", "json", "showcase", "hello", "dynatable"};
     for (int i = 0, n = sizeGraphs.length; i < n; ++i)
-      new SizeGraph(sizeGraphCss, root, model, "size-" + sizeGraphs[i], sizeGraphs[i]);
-    
+      new SizeGraph(sizeGraphCss, root, model, selectionController, "size-" + sizeGraphs[i], sizeGraphs[i]);
+
     // TODO(knorton): Build speed graphs.
 
     model.load();

@@ -6,21 +6,76 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.SpanElement;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.CssResource;
+import com.google.gwt.topspin.ui.client.MouseMoveEvent;
+import com.google.gwt.topspin.ui.client.MouseMoveListener;
+import com.google.gwt.topspin.ui.client.MouseOutEvent;
+import com.google.gwt.topspin.ui.client.MouseOutListener;
 
 import kellegous.client.data.Array;
 import kellegous.client.data.Numbers;
 import kellegous.client.model.Model;
 import kellegous.client.model.PerfData;
+import kellegous.client.model.Model.SizeData;
 
-// TODO(knorton): Add increase/decrease indicators.
-// TODO(knorton): Draw max/min bars.
-public class SizeGraph implements Model.Listener {
+public class SizeGraph {
 
+  private class Controller implements Model.Listener, MouseMoveListener, MouseOutListener, SelectionCoordination.Delegate {
+    void attach(Model model, SelectionCoordination.Controller selectionController) {
+      model.addListener(this);
+      MouseMoveEvent.addMouseMoveListener(SizeGraph.this, m_canvas, this);
+      MouseOutEvent.addMouseOutListener(SizeGraph.this, m_canvas, this);
+      selectionController.addDelegate(this);
+    }
+
+    @Override
+    public void onMouseMove(MouseMoveEvent event) {
+      final int x = event.getNativeEvent().getClientX() - m_canvas.getOffsetLeft();
+      int index = (int)(x / m_barWidth);
+      m_selectionController.doHoverOn(index);
+    }
+
+    @Override
+    public void didLoad(Model model) {
+      update(model);
+    }
+
+    @Override
+    public void serverDidStartResponding(Model model) {
+    }
+
+    @Override
+    public void serverDidStopResponding(Model model) {
+    }
+
+    @Override
+    public void onMouseOut(MouseOutEvent event) {
+      m_selectionController.doRemoveHover();
+    }
+
+    @Override
+    public void shouldHoverOn(int index) {
+      hoverOn(index);
+    }
+
+    @Override
+    public void shouldRemoveHover() {
+      hoverOn(-1);
+    }
+  }
+
+  private final CanvasElement m_canvas;
   private final CanvasElement.Context m_context;
   private final String m_tag;
-  private final int m_width, m_height;
   private final SpanElement m_change;
   private final Css m_css;
+  private final SelectionCoordination.Controller m_selectionController;
+
+  private final double m_barWidth;
+
+  private Array<SizeData> m_data;
+  private int m_hoveredIndex = -1;
+
+  // TODO(knorton): Need fields for selected & hovered bars.
 
   public interface Css extends CssResource {
     int width();
@@ -49,7 +104,7 @@ public class SizeGraph implements Model.Listener {
     Css sizeGraphCss();
   }
 
-  public SizeGraph(Css css, Element parent, Model model, String tag, String labelText) {
+  public SizeGraph(Css css, Element parent, Model model, SelectionCoordination.Controller selectionController, String tag, String labelText) {
     final Document document = parent.getOwnerDocument();
     final DivElement graph = document.createDivElement();
     final CanvasElement canvas = CanvasElement.create(document, css.width(), css.height());
@@ -71,15 +126,20 @@ public class SizeGraph implements Model.Listener {
     info.appendChild(label);
     info.appendChild(change);
 
+    m_canvas = canvas;
     m_context = canvas.context();
+    m_selectionController = selectionController;
     m_tag = tag;
-    // TODO(knorton): These fields can be removed.
-    m_width = css.width();
-    m_height = css.height();
     m_change = change;
     m_css = css;
+    m_barWidth = (double)css.width() / (double)model.selectionSize();
 
-    model.addListener(this);
+    new Controller().attach(model, selectionController);
+  }
+
+  private void hoverOn(int index) {
+    m_hoveredIndex = index;
+    render();
   }
 
   private static double max(Array<Model.SizeData> data) {
@@ -92,25 +152,34 @@ public class SizeGraph implements Model.Listener {
     return max;
   }
 
-  private void render(Array<Model.SizeData> data) {
+  private void render() {
+    final Array<SizeData> data = m_data;
+    if (m_data == null)
+      return;
+
+    final int width = m_css.width();
+    final int height = m_css.height();
     final double max = max(data);
-    final double dx = (float)m_width / (float)data.size();
-    final double dy = (float)m_height / (float)max;
+    final double dx = m_barWidth;
+    final double dy = (double)height / (double)max;
 
     final double bw = 0.75 * dx;
     final CanvasElement.Context context = m_context;
-    m_context.clearRect(0, 0, m_width, m_height);
-    context.setFillStyle("#39f");
+    m_context.clearRect(0, 0, width, height);
+
+    // main bar.
     for (int i = 0, n = data.size(); i < n; ++i) {
+      context.setFillStyle(i == m_hoveredIndex ? "#f00" : "#39f");
       final double y = dy * data.get(i).max();
-      context.fillRect(dx * i, m_height - y, bw, y);
+      context.fillRect(dx * i, height - y, bw, y);
     }
 
+    // min/max bar.
     context.setFillStyle("rgba(0, 0, 0, 0.4)");
     for (int i = 0, n = data.size(); i < n; ++i) {
       final Model.SizeData d = data.get(i);
       final double y = dy * d.max();
-      context.fillRect(dx * i, m_height - y, bw, y - dy * d.min());
+      context.fillRect(dx * i, height - y, bw, y - dy * d.min());
     }
   }
 
@@ -134,16 +203,16 @@ public class SizeGraph implements Model.Listener {
   }
 
   private void update(Model model) {
-    final Array<Model.SizeData> data = toData(model.results(), m_tag);
+    m_data = toData(model.results(), m_tag);
 
     // Render graphs.
-    render(data);
+    render();
 
-    if (data.size() < 2)
+    if (m_data.size() < 2)
       // TODO(knorton): Hide the pct change indicator.
       return;
 
-    double change = computePercentChange(data);
+    double change = computePercentChange(m_data);
     double absChange = Math.abs(change);
     if (absChange < 0.01) {
       m_change.setInnerText(" " + Numbers.toFixed(absChange * 100, 1) + "%");
@@ -155,18 +224,5 @@ public class SizeGraph implements Model.Listener {
       m_change.setInnerText("\u2191" + Numbers.toFixed(absChange * 100, 1) + "%");
       m_change.setClassName(m_css.change() + " " + m_css.changeBoo());
     }
-  }
-
-  @Override
-  public void serverDidStartResponding(Model model) {
-  }
-
-  @Override
-  public void serverDidStopResponding(Model model) {
-  }
-
-  @Override
-  public void didLoad(Model model) {
-    update(model);
   }
 }

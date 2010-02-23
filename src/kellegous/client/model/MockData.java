@@ -1,12 +1,12 @@
-package kellegous.client;
+package kellegous.client.model;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
+import kellegous.client.Xhr;
 import kellegous.client.data.Array;
 import kellegous.client.data.Callback;
 import kellegous.client.data.IntArray;
 import kellegous.client.data.StringArray;
-import kellegous.client.model.Client;
 
 public class MockData {
   private final static class Revision extends JavaScriptObject {

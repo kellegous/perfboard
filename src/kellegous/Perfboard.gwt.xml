@@ -2,4 +2,5 @@
 <module rename-to='perfboard'>
   <inherits name='com.google.gwt.topspin.TopSpin' />
   <entry-point class='kellegous.client.Perfboard' />
+  <set-property name="user.agent" value="safari" />
 </module>
