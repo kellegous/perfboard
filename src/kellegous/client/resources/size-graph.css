@@ -1,11 +1,11 @@
 @def width 800px;
-@def height 40px;
+@def height 60px;
+@def padding 20px;
 
 .graph {
   width: 1024px;
   position: relative;
-  height: 40px;
-  margin: 10px 0;
+  height: 60px;
   border-bottom: 1px solid #ccc;
 }
 

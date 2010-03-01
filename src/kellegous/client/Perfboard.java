@@ -101,26 +101,35 @@ public class Perfboard implements EntryPoint {
 
   }
 
-  public interface Resources extends Header.Resources, SizeGraph.Resources {
+  public interface Resources extends HeaderView.Resources, SizeGraphView.Resources, RevisionCalloutView.Resources, SectionHeaderView.Resources {
   }
 
   public void onModuleLoad() {
     Debug.init(new Logger(Document.get()));
     final Resources resources = GWT.create(Resources.class);
-    StyleInjector.inject(resources.headerCss().getText() + resources.sizeGraphCss().getText());
+    StyleInjector.inject(resources.headerCss().getText() //
+        + resources.sizeGraphCss().getText() //
+        + resources.selectionHoverCss().getText() //
+        + resources.sectionHeaderCss().getText());
 
-    // final Model model = new Model(MockData.createClient());
     final Model model = new Model(new RealClient("/rpc", "trunk"));
 
     final DivElement root = Document.get().getElementById("a").cast();
-    new Header(root, model, resources);
+    new HeaderView(root, model, resources);
+
+    final SharedGraphEvents.Controller selectionController = new SharedGraphEvents.Controller();
+
+    // A label over the size tests.
+    // SectionHeaderView.add(resources, root, "SIZE TESTS");
+
+    // Callout for the selected revision.
+    RevisionCalloutView.attach(root, resources, model, selectionController);
 
     // Build size graphs.
-    final SelectionCoordination.Controller selectionController = new SelectionCoordination.Controller();
-    final SizeGraph.Css sizeGraphCss = resources.sizeGraphCss();
+    final SizeGraphView.Css sizeGraphCss = resources.sizeGraphCss();
     final String[] sizeGraphs = new String[] {"mail", "json", "showcase", "hello", "dynatable"};
     for (int i = 0, n = sizeGraphs.length; i < n; ++i)
-      new SizeGraph(sizeGraphCss, root, model, selectionController, "size-" + sizeGraphs[i], sizeGraphs[i]);
+      new SizeGraphView(sizeGraphCss, root, model, selectionController, "size-" + sizeGraphs[i], sizeGraphs[i]);
 
     // TODO(knorton): Build speed graphs.
 

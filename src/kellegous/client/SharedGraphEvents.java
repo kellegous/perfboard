@@ -2,7 +2,7 @@ package kellegous.client;
 
 import kellegous.client.data.Array;
 
-public class SelectionCoordination {
+public class SharedGraphEvents {
   public interface Delegate {
     void shouldHoverOn(int index);
 

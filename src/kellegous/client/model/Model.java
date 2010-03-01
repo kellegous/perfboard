@@ -82,6 +82,10 @@ public class Model {
       m_listeners.get(i).serverDidStartResponding(this);
   }
 
+  public boolean loaded() {
+    return m_results != null;
+  }
+
   public Array<PerfData> results() {
     return m_results;
   }

@@ -10,7 +10,7 @@ import kellegous.client.data.StringArray;
 import kellegous.client.model.Model;
 import kellegous.client.model.Revision;
 
-public class Header implements Model.Listener {
+public class HeaderView implements Model.Listener {
 
   private static final int MAX_LINES_IN_HEADER = 4;
 
@@ -36,7 +36,7 @@ public class Header implements Model.Listener {
   private final DivElement m_revision;
   private final DivElement m_author;
 
-  public Header(Element parent, Model model, Resources resources) {
+  public HeaderView(Element parent, Model model, Resources resources) {
     final Document document = parent.getOwnerDocument();
 
     final DivElement root = document.createDivElement();

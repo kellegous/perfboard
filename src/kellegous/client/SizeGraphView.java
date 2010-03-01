@@ -17,20 +17,23 @@ import kellegous.client.model.Model;
 import kellegous.client.model.PerfData;
 import kellegous.client.model.Model.SizeData;
 
-public class SizeGraph {
+public class SizeGraphView {
 
-  private class Controller implements Model.Listener, MouseMoveListener, MouseOutListener, SelectionCoordination.Delegate {
-    void attach(Model model, SelectionCoordination.Controller selectionController) {
+  private class Controller implements Model.Listener, MouseMoveListener,
+      MouseOutListener, SharedGraphEvents.Delegate {
+    void attach(Model model,
+        SharedGraphEvents.Controller selectionController) {
       model.addListener(this);
-      MouseMoveEvent.addMouseMoveListener(SizeGraph.this, m_canvas, this);
-      MouseOutEvent.addMouseOutListener(SizeGraph.this, m_canvas, this);
+      MouseMoveEvent.addMouseMoveListener(SizeGraphView.this, m_canvas, this);
+      MouseOutEvent.addMouseOutListener(SizeGraphView.this, m_canvas, this);
       selectionController.addDelegate(this);
     }
 
     @Override
     public void onMouseMove(MouseMoveEvent event) {
-      final int x = event.getNativeEvent().getClientX() - m_canvas.getOffsetLeft();
-      int index = (int)(x / m_barWidth);
+      final int x = event.getNativeEvent().getClientX()
+          - m_canvas.getOffsetLeft();
+      int index = (int) (x / m_barWidth);
       m_selectionController.doHoverOn(index);
     }
 
@@ -68,7 +71,7 @@ public class SizeGraph {
   private final String m_tag;
   private final SpanElement m_change;
   private final Css m_css;
-  private final SelectionCoordination.Controller m_selectionController;
+  private final SharedGraphEvents.Controller m_selectionController;
 
   private final double m_barWidth;
 
@@ -78,6 +81,8 @@ public class SizeGraph {
   // TODO(knorton): Need fields for selected & hovered bars.
 
   public interface Css extends CssResource {
+    int padding();
+
     int width();
 
     int height();
@@ -104,10 +109,13 @@ public class SizeGraph {
     Css sizeGraphCss();
   }
 
-  public SizeGraph(Css css, Element parent, Model model, SelectionCoordination.Controller selectionController, String tag, String labelText) {
+  public SizeGraphView(Css css, Element parent, Model model,
+      SharedGraphEvents.Controller selectionController, String tag,
+      String labelText) {
     final Document document = parent.getOwnerDocument();
     final DivElement graph = document.createDivElement();
-    final CanvasElement canvas = CanvasElement.create(document, css.width(), css.height());
+    final CanvasElement canvas = CanvasElement.create(document, css.width(),
+        css.height());
     final DivElement info = document.createDivElement();
     final SpanElement label = document.createSpanElement();
     final SpanElement change = document.createSpanElement();
@@ -132,7 +140,7 @@ public class SizeGraph {
     m_tag = tag;
     m_change = change;
     m_css = css;
-    m_barWidth = (double)css.width() / (double)model.selectionSize();
+    m_barWidth = (double) css.width() / (double) model.selectionSize();
 
     new Controller().attach(model, selectionController);
   }
@@ -159,17 +167,25 @@ public class SizeGraph {
 
     final int width = m_css.width();
     final int height = m_css.height();
+    final int padding = m_css.padding();
+
     final double max = max(data);
     final double dx = m_barWidth;
-    final double dy = (double)height / (double)max;
+    final double dy = (double) (height - padding) / (double) max;
 
     final double bw = 0.75 * dx;
     final CanvasElement.Context context = m_context;
     m_context.clearRect(0, 0, width, height);
 
     // main bar.
+    context.setFillStyle("#39f");
     for (int i = 0, n = data.size(); i < n; ++i) {
-      context.setFillStyle(i == m_hoveredIndex ? "#f00" : "#39f");
+      if (i == m_hoveredIndex) {
+        context.save();
+        context.setFillStyle("#999");
+        context.fillRect(dx * i, 0, bw, height);
+        context.restore();
+      }
       final double y = dy * data.get(i).max();
       context.fillRect(dx * i, height - y, bw, y);
     }
@@ -183,7 +199,8 @@ public class SizeGraph {
     }
   }
 
-  private static Array<Model.SizeData> toData(Array<PerfData> results, String tag) {
+  private static Array<Model.SizeData> toData(Array<PerfData> results,
+      String tag) {
     // TODO(knorton): Supply an initial size.
     final Array<Model.SizeData> data = Array.create();
     for (int i = 0, n = results.size(); i < n; ++i)
@@ -195,8 +212,10 @@ public class SizeGraph {
     final int n = results.size();
     final Model.SizeData current = results.get(n - 1);
     final Model.SizeData last = results.get(n - 2);
-    final double maxChange = (double)(current.max() - last.max()) / (double)last.max();
-    final double minChange = (double)(current.min() - last.min()) / (double)last.min();
+    final double maxChange = (double) (current.max() - last.max())
+        / (double) last.max();
+    final double minChange = (double) (current.min() - last.min())
+        / (double) last.min();
 
     // Return the worst result.
     return Math.max(maxChange, minChange);
@@ -218,10 +237,12 @@ public class SizeGraph {
       m_change.setInnerText(" " + Numbers.toFixed(absChange * 100, 1) + "%");
       m_change.setClassName(m_css.change() + " " + m_css.changeMeh());
     } else if (change < 0) {
-      m_change.setInnerText("\u2193" + Numbers.toFixed(absChange * 100, 1) + "%");
+      m_change.setInnerText("\u2193" + Numbers.toFixed(absChange * 100, 1)
+          + "%");
       m_change.setClassName(m_css.change() + " " + m_css.changeYay());
     } else {
-      m_change.setInnerText("\u2191" + Numbers.toFixed(absChange * 100, 1) + "%");
+      m_change.setInnerText("\u2191" + Numbers.toFixed(absChange * 100, 1)
+          + "%");
       m_change.setClassName(m_css.change() + " " + m_css.changeBoo());
     }
   }
