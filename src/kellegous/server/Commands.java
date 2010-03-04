@@ -97,7 +97,7 @@ public class Commands {
       return createStatusResponse(true);
     }
   }
-  
+
   static class LoadCommand implements Command {
     private static JsonArray revisionToArray(Revision revision) {
       final JsonArray result = JsonArray.create();
@@ -150,7 +150,7 @@ public class Commands {
       return createResponse(headRevision, branch, headData, revisions);
     }
   }
-  
+
   static class ImportMockData implements Command {
     private static String[] jsonArrayToStringArray(JsonArray json) {
       final String[] result = new String[json.getLength()];
@@ -205,7 +205,11 @@ public class Commands {
       for (int i = 0, n = revisions.getLength(); i < n; ++i) {
         final JsonObject json = revisions.get(i).asObject();
         jsonObjectToPerfData(branchName, json).save(store);
-        // jsonObjectToRevision(json).save(store);
+        // Only save the revision if there isn't one. This is a temporary
+        // work around to keep the import from clobbering data from rev_bot.
+        final Revision revision = jsonObjectToRevision(json);
+        if (Revision.find(store, revision.id()) == null)
+          revision.save(store);
       }
 
       return JsonObject.create();
