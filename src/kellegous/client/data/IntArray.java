@@ -43,4 +43,8 @@ public final class IntArray extends DataStructure {
   public boolean isEmpty() {
     return size() == 0;
   }
+  
+  public void reverse() {
+    this.<JsArray>cast().reverse();
+  }
 }

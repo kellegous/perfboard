@@ -98,6 +98,13 @@ public class Model {
     m_listeners.append(listener);
   }
 
+  private static Array<PerfData> reverse(Array<PerfData> array) {
+    final Array<PerfData> yarra = Array.create();
+    for (int i = 0, n = array.size(); i < n; ++i)
+      yarra.set(n - 1 - i, array.get(i));
+    return yarra;
+  }
+
   public void load() {
     m_client.load(m_size, new Callback<LoadResponse>() {
       @Override
@@ -109,10 +116,13 @@ public class Model {
       public void didCallback(LoadResponse value) {
         // TODO(knorton): Rename to selectedRevision;
         m_currentRevision = value.head();
-        m_results = value.results();
+
+        m_results = reverse(value.results());
 
         if (Debug.enabled())
-          Debug.log("Load (" + m_results.get(0).revision() + " - " + m_results.get(m_results.size() - 1).revision() + ") count: " + value.numberOfRevisions());
+          Debug.log("Load (" + m_results.get(0).revision() + " - "
+              + m_results.get(m_results.size() - 1).revision() + ") count: "
+              + value.numberOfRevisions());
 
         dispatchServerDidStartResponding();
         dispatchDidLoad();

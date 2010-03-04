@@ -1,0 +1,14 @@
+(01) Refactor sdm_bot.py into a general perf_bot.
+(02) Create RPC endpoints to support perf_bot.
+(03) Add caching.
+(04) Add window selection widget.
+(05) Add selection to graphs.
+(06) Add revision fetching RPC endpoint for client.
+(07) Disallow terrible user agents.
+(08) Create a build file.
+(09) Fix the styling on the header.
+(10) Add version indicator.
+(11) Add placeholder for speed bots.
+(12) Bot authentication.
+(13) Bot unreported revision list RPC.
+(14) Bot status indicators (rev doesn't belong to branch, rev did not build)

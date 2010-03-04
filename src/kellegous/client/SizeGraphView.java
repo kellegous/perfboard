@@ -21,8 +21,7 @@ public class SizeGraphView {
 
   private class Controller implements Model.Listener, MouseMoveListener,
       MouseOutListener, SharedGraphEvents.Delegate {
-    void attach(Model model,
-        SharedGraphEvents.Controller selectionController) {
+    void attach(Model model, SharedGraphEvents.Controller selectionController) {
       model.addListener(this);
       MouseMoveEvent.addMouseMoveListener(SizeGraphView.this, m_canvas, this);
       MouseOutEvent.addMouseOutListener(SizeGraphView.this, m_canvas, this);

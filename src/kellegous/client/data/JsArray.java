@@ -150,6 +150,10 @@ final class JsArray extends JavaScriptObject {
     setStringImpl(index, value);
   }
 
+  public native void reverse() /*-{
+    this.reverse();
+  }-*/;
+
   private native boolean getBooleanImpl(int index) /*-{
     return this[index];
   }-*/;

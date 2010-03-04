@@ -68,4 +68,8 @@ public final class Array<T> extends DataStructure {
   public Array<T> slice(int start) {
     return this.<JsArray> cast().slice(start).cast();
   }
+
+  public void reverse() {
+    this.<JsArray> cast().reverse();
+  }
 }

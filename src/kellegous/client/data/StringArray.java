@@ -55,4 +55,8 @@ public final class StringArray extends JavaScriptObject {
   public StringArray slice(int start) {
     return this.<JsArray> cast().slice(start).cast();
   }
+  
+  public void reverse() {
+    this.<JsArray>cast().reverse();
+  }  
 }
